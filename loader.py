@@ -9,7 +9,7 @@ import pandas as pd
 #   output:
 #       - raw data (DataFrame)
 #
-def load_data(file_path, chunksize=10000):
+def load_data(file_path, update_progress, chunksize=10000):
     try:
         # Count total lines in the file
         total_lines = sum(1 for _ in open(file_path, 'r', encoding='cp950', errors='replace'))
@@ -25,7 +25,7 @@ def load_data(file_path, chunksize=10000):
             # progress
             lines_processed += len(chunk)
             percentage = lines_processed / total_lines * 100
-            print(f"Load data processing: {percentage:.2f}%...", end='\r')
+            update_progress(percentage, "Loading data...")
         
         return data
     except Exception as e:

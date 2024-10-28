@@ -9,9 +9,10 @@ import numpy as np
 #           - R: rotation matrix (numpy array of shape(n, 3))
 #
 def rotation_matrix(angles):
-    angle_roll = angles[0]
-    angle_pitch = angles[1]
-    angle_yaw = angles[2]
+    # Convert to radians
+    angle_roll = np.radians(angles[0])
+    angle_pitch = np.radians(angles[1])
+    angle_yaw = np.radians(angles[2])
 
     # Rotation matrix for roll (X-axis)
     R_roll = np.array([
@@ -48,7 +49,7 @@ def rotation_matrix(angles):
 #       output:
 #           - angles: rotation angle [roll, pitch, yaw] (numpy array of shape(n, 3))
 #
-def integrate_gyro(gyro_data, dt):
+def integrate_gyro(gyro_data, dt, update_progress):
     # Count total lines in the data
     total_lines = gyro_data.shape[0]
     # lines_processed is for progress calculation
@@ -57,12 +58,14 @@ def integrate_gyro(gyro_data, dt):
     angles = []
     angle = np.zeros(3)  # [roll, pitch, yaw]
     for gyro in gyro_data:
+        # FIXME: R*gyro*dt
         angle += gyro * dt
         angles.append(angle.copy())
         # progress
         lines_processed += 1
         percentage = lines_processed / total_lines * 100
-        print(f"Calculate rotation angle: {percentage:.2f}%...", end='\r')
+        update_progress(percentage, "Calculate rotation angle...")
+        #print(f"Calculate rotation angle: {percentage:.2f}%...", end='\r')
 
     return np.array(angles)
 
@@ -75,7 +78,7 @@ def integrate_gyro(gyro_data, dt):
 #       output:
 #           - rotated_accel: rotated angle [roll, pitch, yaw] (numpy array of shape(n, 3))
 #
-def rotate_accel(accel_data, angles):
+def rotate_accel(accel_data, angles, update_progress):
     # Count total lines in the data
     total_lines = accel_data.shape[0]
     # lines_processed is for progress calculation
@@ -91,7 +94,8 @@ def rotate_accel(accel_data, angles):
         # progress
         lines_processed += 1
         percentage = lines_processed / total_lines * 100
-        print(f"Calculate rotated acceleration: {percentage:.2f}%...", end='\r')
+        update_progress(percentage, "Calculate rotated acceleration...")
+        #print(f"Calculate rotated acceleration: {percentage:.2f}%...", end='\r')
     return np.array(rotated_accel)
 
 #
@@ -103,7 +107,7 @@ def rotate_accel(accel_data, angles):
 #       output:
 #           - positions: pisition [x, y, z] (numpy array of shape(n, 3))
 #
-def integrate_accel(accel_data, dt):
+def integrate_accel(accel_data, dt, update_progress):
     # Count total lines in the data
     total_lines = accel_data.shape[0]
     # lines_processed is for progress calculation
@@ -120,7 +124,8 @@ def integrate_accel(accel_data, dt):
         # progress
         lines_processed += 1
         percentage = lines_processed / total_lines * 100
-        print(f"Calculate position: {percentage:.2f}%...", end='\r')
+        update_progress(percentage, "Calculate position...")
+        #print(f"Calculate position: {percentage:.2f}%...", end='\r')
     return np.array(positions)
 
 #
@@ -132,9 +137,9 @@ def integrate_accel(accel_data, dt):
 #   output:
 #       - positions: numpy array of shape(n, 3)
 #
-def simulate(accel_data, gyro_data, dt):
-    angles = integrate_gyro(gyro_data, dt)
-    rotated_accel = rotate_accel(accel_data, angles)
-    positions = integrate_accel(rotated_accel, dt)
+def simulate(accel_data, gyro_data, dt, update_progress):
+    angles = integrate_gyro(gyro_data, dt, update_progress)
+    rotated_accel = rotate_accel(accel_data, angles, update_progress)
+    positions = integrate_accel(rotated_accel, dt, update_progress)
 
     return positions
