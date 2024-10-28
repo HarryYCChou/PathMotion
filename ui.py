@@ -14,11 +14,22 @@ root.geometry("600x160")
 
 # Global Parameters
 file_path = ""
+prev_progress_value = 0
+prev_processing_item = ""
 
 def update_progress(value, processing_item="Unknown"):
-    progress['value'] = value
-    root.update_idletasks()  # Refresh the UI
-    progress_label.config(text=f"{value:.2f}% {processing_item}")
+    global prev_processing_item, prev_progress_value
+    if prev_processing_item != processing_item :
+        # reset progress
+        prev_progress_value = 0
+        prev_processing_item = processing_item
+
+    # only update progress when integer value changed
+    if int(value) > prev_progress_value :
+        prev_progress_value = int(value)
+        progress['value'] = value
+        root.update_idletasks()  # Refresh the UI
+        progress_label.config(text=f"{value:.2f}% {processing_item}")
 
 def check_thread(thread):
     if thread.is_alive():
