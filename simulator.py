@@ -59,7 +59,8 @@ def integrate_gyro(gyro_data, dt, update_progress):
     angle = np.zeros(3)  # [roll, pitch, yaw]
     for gyro in gyro_data:
         # FIXME: R*gyro*dt
-        angle += gyro * dt
+        R = rotation_matrix(angle)  # Create rotation matrix from angles
+        angle += R @ gyro * dt
         angles.append(angle.copy())
         # progress
         lines_processed += 1
