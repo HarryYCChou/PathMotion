@@ -49,11 +49,21 @@ def rotation_matrix(angles):
 #           - angles: rotation angle [roll, pitch, yaw] (numpy array of shape(n, 3))
 #
 def integrate_gyro(gyro_data, dt):
+    # Count total lines in the data
+    total_lines = gyro_data.shape[0]
+    # lines_processed is for progress calculation
+    lines_processed = 0
+
     angles = []
     angle = np.zeros(3)  # [roll, pitch, yaw]
     for gyro in gyro_data:
         angle += gyro * dt
         angles.append(angle.copy())
+        # progress
+        lines_processed += 1
+        percentage = lines_processed / total_lines * 100
+        print(f"Calculate rotation angle: {percentage:.2f}%...", end='\r')
+
     return np.array(angles)
 
 #
@@ -66,12 +76,22 @@ def integrate_gyro(gyro_data, dt):
 #           - rotated_accel: rotated angle [roll, pitch, yaw] (numpy array of shape(n, 3))
 #
 def rotate_accel(accel_data, angles):
+    # Count total lines in the data
+    total_lines = accel_data.shape[0]
+    # lines_processed is for progress calculation
+    lines_processed = 0
+
     rotated_accel = []
+
     for i, angle in enumerate(angles):
         # Assuming angle = [roll, pitch, yaw]
         R = rotation_matrix(angle)  # Create rotation matrix from angles
         rotated = R @ accel_data[i]
         rotated_accel.append(rotated)
+        # progress
+        lines_processed += 1
+        percentage = lines_processed / total_lines * 100
+        print(f"Calculate rotated acceleration: {percentage:.2f}%...", end='\r')
     return np.array(rotated_accel)
 
 #
@@ -84,13 +104,23 @@ def rotate_accel(accel_data, angles):
 #           - positions: pisition [x, y, z] (numpy array of shape(n, 3))
 #
 def integrate_accel(accel_data, dt):
+    # Count total lines in the data
+    total_lines = accel_data.shape[0]
+    # lines_processed is for progress calculation
+    lines_processed = 0
+
     velocity = np.zeros(3)  # Initial velocity
     position = np.zeros(3)  # Initial position
     positions = []
+
     for accel in accel_data:
         velocity += accel * dt
         position += velocity * dt
         positions.append(position.copy())
+        # progress
+        lines_processed += 1
+        percentage = lines_processed / total_lines * 100
+        print(f"Calculate position: {percentage:.2f}%...", end='\r')
     return np.array(positions)
 
 #
