@@ -32,3 +32,6 @@ pip install -r requirements.txt
 ```
 python PathMotion.py
 ```
+
+## Demo
+![Demo Animation](demo/PathMotion.gif)
