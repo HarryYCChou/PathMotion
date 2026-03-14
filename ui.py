@@ -1,11 +1,12 @@
 from loader import load_data
 from analyzer import get_description, get_sensor_data
-from simulator import simulate
+from simulator import simulate, rotation_matrix
 from plot import plot_result
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk, filedialog
 import threading
+import numpy as np
 
 # Initialize tkinter UI
 root = tk.Tk()
@@ -16,6 +17,25 @@ root.geometry("600x160")
 file_path = ""
 prev_progress_value = 0
 prev_processing_item = ""
+
+def integrate_gyro_to_degrees(gyro_data, dt, update_progress):
+    """Integrate gyro data to get angles in degrees"""
+    angles_rad = []
+    angle = np.zeros(3)  # [roll, pitch, yaw] in radians
+
+    for i, gyro in enumerate(gyro_data):
+        # Convert gyro from rad/s to rad by multiplying dt
+        angle += gyro * dt
+        angles_rad.append(angle.copy())
+
+        # Progress callback
+        if update_progress:
+            percentage = (i + 1) / len(gyro_data) * 100
+            update_progress(percentage, "Calculating angles...")
+
+    # Convert from radians to degrees
+    angles_deg = np.degrees(angles_rad)
+    return angles_deg
 
 def update_progress(value, processing_item="Unknown"):
     global prev_processing_item, prev_progress_value
@@ -60,11 +80,15 @@ def threaded_load_data_and_simulate(file_path, update_progress):
         sample_rate_label.config(text=f"Sample Rate: {description['sample_rate']}")
         #file_label.config(text=f"Selected File: {file_path}")
         #print("Run simulation...")
+        gyro_array = gyro_data.to_numpy().astype(float)
         result = simulate(accel_data_high.to_numpy().astype(float),
-                          gyro_data.to_numpy().astype(float),
+                          gyro_array,
                           1/int(description['sample_rate']), update_progress)
         #print("Plot result...")
-        plot_result(result)
+        # Convert gyro data (rad/s) to angles (degrees) for wing visualization
+        dt = 1/int(description['sample_rate'])
+        angles_deg = integrate_gyro_to_degrees(gyro_array, dt, lambda p, _: None)
+        plot_result(result, angles_deg)
     else:
         print("Invalid file path or format")
 
