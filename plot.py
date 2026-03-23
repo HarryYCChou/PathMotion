@@ -35,7 +35,10 @@ def rotation_matrix(angles):
     return R
 
 def draw_wing(ax, position, prev_position, next_position, angles_deg):
-    """Draw bird wing at given position, perpendicular to flight path (wings extend sideways)"""
+    """Draw bird wing at given position, oriented by IMU angles"""
+    # Convert angles from degrees to radians
+    angles_rad = np.radians(angles_deg)
+
     # Calculate flight direction (tangent to path)
     if prev_position is not None and next_position is not None:
         flight_dir = next_position - prev_position
@@ -70,11 +73,15 @@ def draw_wing(ax, position, prev_position, next_position, angles_deg):
     else:
         wing_dir = np.array([0, 1, 0])
 
-    # Wing endpoints (left wing tip to right wing tip)
-    wing_start = position - wing_dir * WING_HALF_SPAN
-    wing_end = position + wing_dir * WING_HALF_SPAN
+    # Apply IMU rotation to wing direction using roll, pitch, yaw
+    R = rotation_matrix(angles_rad)
+    wing_dir_rotated = R @ wing_dir
 
-    # Draw the wing as a blue line (perpendicular to flight path)
+    # Wing endpoints (left wing tip to right wing tip)
+    wing_start = position - wing_dir_rotated * WING_HALF_SPAN
+    wing_end = position + wing_dir_rotated * WING_HALF_SPAN
+
+    # Draw the wing as a blue line (oriented by IMU angles)
     ax.plot([wing_start[0], wing_end[0]],
             [wing_start[1], wing_end[1]],
             [wing_start[2], wing_end[2]],
